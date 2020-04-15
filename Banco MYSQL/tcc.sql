@@ -1,14 +1,13 @@
 -- phpMyAdmin SQL Dump
--- version 5.0.1
+-- version 5.0.2
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 08-Abr-2020 às 03:49
+-- Tempo de geração: 15-Abr-2020 às 04:00
 -- Versão do servidor: 10.4.11-MariaDB
--- versão do PHP: 7.3.15
+-- versão do PHP: 7.3.16
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -19,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Banco de dados: `banco`
+-- Banco de dados: `tcc`
 --
 
 -- --------------------------------------------------------
@@ -46,7 +45,7 @@ CREATE TABLE `tb_agendamento_avulso` (
 
 CREATE TABLE `tb_agendamento_pacote` (
   `agp_codigo` int(11) NOT NULL,
-  `agp_servico` int(11) DEFAULT NULL,
+  `agp_pacote` int(11) DEFAULT NULL,
   `agp_funcionario` int(11) DEFAULT NULL,
   `agp_cliente` int(11) DEFAULT NULL,
   `agp_dta_agendamento` datetime NOT NULL,
@@ -70,6 +69,22 @@ CREATE TABLE `tb_centro_custo` (
 -- --------------------------------------------------------
 
 --
+-- Estrutura da tabela `tb_dados_cliente`
+--
+
+CREATE TABLE `tb_dados_cliente` (
+  `dusu_codigo` int(11) NOT NULL,
+  `dusu_tb_codigo` int(11) DEFAULT NULL,
+  `dusu_endereco` varchar(60) NOT NULL,
+  `dusu_numero` int(11) NOT NULL,
+  `dusu_cep` int(11) NOT NULL,
+  `dusu_telefone` varchar(14) DEFAULT NULL,
+  `dusu_celular` varchar(14) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura da tabela `tb_dados_funcionario`
 --
 
@@ -79,24 +94,8 @@ CREATE TABLE `tb_dados_funcionario` (
   `dfn_endereco` varchar(60) NOT NULL,
   `dfn_numero` int(11) NOT NULL,
   `dfn_cep` int(11) NOT NULL,
-  `dfn_telefone` varchar(14) NOT NULL,
-  `dfn_celular` varchar(14) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Estrutura da tabela `tb_dados_usuario`
---
-
-CREATE TABLE `tb_dados_usuario` (
-  `dusu_codigo` int(11) NOT NULL,
-  `dusu_tb_codigo` int(11) DEFAULT NULL,
-  `dusu_endereco` varchar(60) NOT NULL,
-  `dusu_numero` int(11) NOT NULL,
-  `dusu_cep` int(11) NOT NULL,
-  `dusu_telefone` varchar(14) NOT NULL,
-  `dusu_celular` varchar(14) NOT NULL
+  `dfn_telefone` varchar(14) DEFAULT NULL,
+  `dfn_celular` varchar(14) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -120,7 +119,6 @@ CREATE TABLE `tb_dispesa` (
 
 CREATE TABLE `tb_fatura` (
   `fat_codigo` int(11) NOT NULL,
-  `fat_centro_custo` int(11) DEFAULT NULL,
   `fat_data` date NOT NULL,
   `fat_valor` decimal(10,2) NOT NULL,
   `fat_vencimento` date NOT NULL
@@ -155,6 +153,18 @@ CREATE TABLE `tb_funcionario` (
 -- --------------------------------------------------------
 
 --
+-- Estrutura da tabela `tb_itens_pacote`
+--
+
+CREATE TABLE `tb_itens_pacote` (
+  `it_codigo` int(15) NOT NULL,
+  `it_servico` int(15) NOT NULL,
+  `it_pacote` int(15) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura da tabela `tb_login`
 --
 
@@ -173,6 +183,19 @@ CREATE TABLE `tb_login` (
 CREATE TABLE `tb_niveis_de_acesso` (
   `nv_codigo` int(11) NOT NULL,
   `nv_tipo` varchar(30) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura da tabela `tb_pacote`
+--
+
+CREATE TABLE `tb_pacote` (
+  `pc_codigo` int(15) NOT NULL,
+  `pc_descricao` varchar(100) NOT NULL,
+  `pc_valor` decimal(10,2) NOT NULL,
+  `pc_avalicao` int(15) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -222,10 +245,10 @@ ALTER TABLE `tb_agendamento_avulso`
 --
 ALTER TABLE `tb_agendamento_pacote`
   ADD PRIMARY KEY (`agp_codigo`),
-  ADD KEY `fk_cod_sv_agp` (`agp_servico`),
   ADD KEY `fk_cod_usu_agp` (`agp_cliente`),
   ADD KEY `fk_cod_fun_agp` (`agp_funcionario`),
-  ADD KEY `FK_tb_agendamento_pacote_5` (`agp_fatura`);
+  ADD KEY `FK_tb_agendamento_pacote_5` (`agp_fatura`),
+  ADD KEY `pacote` (`agp_pacote`);
 
 --
 -- Índices para tabela `tb_centro_custo`
@@ -235,18 +258,18 @@ ALTER TABLE `tb_centro_custo`
   ADD KEY `tk_dispesa_cc` (`cc_dispesa`);
 
 --
+-- Índices para tabela `tb_dados_cliente`
+--
+ALTER TABLE `tb_dados_cliente`
+  ADD PRIMARY KEY (`dusu_codigo`),
+  ADD KEY `cod_usuario` (`dusu_tb_codigo`);
+
+--
 -- Índices para tabela `tb_dados_funcionario`
 --
 ALTER TABLE `tb_dados_funcionario`
   ADD PRIMARY KEY (`dfn_codigo`),
   ADD KEY `cod_funcionario` (`dfn_funcionario`);
-
---
--- Índices para tabela `tb_dados_usuario`
---
-ALTER TABLE `tb_dados_usuario`
-  ADD PRIMARY KEY (`dusu_codigo`),
-  ADD KEY `cod_usuario` (`dusu_tb_codigo`);
 
 --
 -- Índices para tabela `tb_dispesa`
@@ -259,8 +282,7 @@ ALTER TABLE `tb_dispesa`
 -- Índices para tabela `tb_fatura`
 --
 ALTER TABLE `tb_fatura`
-  ADD PRIMARY KEY (`fat_codigo`),
-  ADD KEY `fk_cod_cc_fat` (`fat_centro_custo`);
+  ADD PRIMARY KEY (`fat_codigo`);
 
 --
 -- Índices para tabela `tb_fornecedor`
@@ -277,6 +299,14 @@ ALTER TABLE `tb_funcionario`
   ADD KEY `fk_login` (`fun_login`);
 
 --
+-- Índices para tabela `tb_itens_pacote`
+--
+ALTER TABLE `tb_itens_pacote`
+  ADD PRIMARY KEY (`it_codigo`),
+  ADD UNIQUE KEY `it_pacote` (`it_pacote`),
+  ADD KEY `servico` (`it_servico`);
+
+--
 -- Índices para tabela `tb_login`
 --
 ALTER TABLE `tb_login`
@@ -287,6 +317,12 @@ ALTER TABLE `tb_login`
 --
 ALTER TABLE `tb_niveis_de_acesso`
   ADD PRIMARY KEY (`nv_codigo`);
+
+--
+-- Índices para tabela `tb_pacote`
+--
+ALTER TABLE `tb_pacote`
+  ADD PRIMARY KEY (`pc_codigo`);
 
 --
 -- Índices para tabela `tb_servico`
@@ -302,6 +338,22 @@ ALTER TABLE `tb_usuario`
   ADD PRIMARY KEY (`usu_cod`),
   ADD KEY `cod_usu_nivel` (`usu_nivel`),
   ADD KEY `fk_usu_logi` (`usu_login`);
+
+--
+-- AUTO_INCREMENT de tabelas despejadas
+--
+
+--
+-- AUTO_INCREMENT de tabela `tb_itens_pacote`
+--
+ALTER TABLE `tb_itens_pacote`
+  MODIFY `it_codigo` int(15) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `tb_pacote`
+--
+ALTER TABLE `tb_pacote`
+  MODIFY `pc_codigo` int(15) NOT NULL AUTO_INCREMENT;
 
 --
 -- Restrições para despejos de tabelas
@@ -322,7 +374,7 @@ ALTER TABLE `tb_agendamento_avulso`
 ALTER TABLE `tb_agendamento_pacote`
   ADD CONSTRAINT `FK_tb_agendamento_pacote_5` FOREIGN KEY (`agp_fatura`) REFERENCES `tb_fatura` (`fat_codigo`),
   ADD CONSTRAINT `fk_cod_fun_agp` FOREIGN KEY (`agp_funcionario`) REFERENCES `tb_funcionario` (`fun_codigo`),
-  ADD CONSTRAINT `fk_cod_sv_agp` FOREIGN KEY (`agp_servico`) REFERENCES `tb_servico` (`sv_codigo`),
+  ADD CONSTRAINT `fk_cod_pacote_agp` FOREIGN KEY (`agp_pacote`) REFERENCES `tb_pacote` (`pc_codigo`),
   ADD CONSTRAINT `fk_cod_usu_agp` FOREIGN KEY (`agp_cliente`) REFERENCES `tb_usuario` (`usu_cod`);
 
 --
@@ -332,16 +384,16 @@ ALTER TABLE `tb_centro_custo`
   ADD CONSTRAINT `tk_dispesa_cc` FOREIGN KEY (`cc_dispesa`) REFERENCES `tb_dispesa` (`dis_codigo`);
 
 --
+-- Limitadores para a tabela `tb_dados_cliente`
+--
+ALTER TABLE `tb_dados_cliente`
+  ADD CONSTRAINT `cod_usuario` FOREIGN KEY (`dusu_tb_codigo`) REFERENCES `tb_usuario` (`usu_cod`);
+
+--
 -- Limitadores para a tabela `tb_dados_funcionario`
 --
 ALTER TABLE `tb_dados_funcionario`
   ADD CONSTRAINT `cod_funcionario` FOREIGN KEY (`dfn_funcionario`) REFERENCES `tb_funcionario` (`fun_codigo`);
-
---
--- Limitadores para a tabela `tb_dados_usuario`
---
-ALTER TABLE `tb_dados_usuario`
-  ADD CONSTRAINT `cod_usuario` FOREIGN KEY (`dusu_tb_codigo`) REFERENCES `tb_usuario` (`usu_cod`);
 
 --
 -- Limitadores para a tabela `tb_dispesa`
@@ -350,17 +402,18 @@ ALTER TABLE `tb_dispesa`
   ADD CONSTRAINT `fk_cod_fornecedor` FOREIGN KEY (`dis_fornecedor`) REFERENCES `tb_fornecedor` (`fnd_codigo`);
 
 --
--- Limitadores para a tabela `tb_fatura`
---
-ALTER TABLE `tb_fatura`
-  ADD CONSTRAINT `fk_cod_cc_fat` FOREIGN KEY (`fat_centro_custo`) REFERENCES `tb_centro_custo` (`cc_cogido`);
-
---
 -- Limitadores para a tabela `tb_funcionario`
 --
 ALTER TABLE `tb_funcionario`
   ADD CONSTRAINT `cod_acesso` FOREIGN KEY (`fun_nivel`) REFERENCES `tb_niveis_de_acesso` (`nv_codigo`),
   ADD CONSTRAINT `fk_login` FOREIGN KEY (`fun_login`) REFERENCES `tb_login` (`lg_codigo`);
+
+--
+-- Limitadores para a tabela `tb_itens_pacote`
+--
+ALTER TABLE `tb_itens_pacote`
+  ADD CONSTRAINT `fk_cod_pacote_it` FOREIGN KEY (`it_pacote`) REFERENCES `tb_pacote` (`pc_codigo`),
+  ADD CONSTRAINT `fk_cod_servico_it` FOREIGN KEY (`it_servico`) REFERENCES `tb_servico` (`sv_codigo`);
 
 --
 -- Limitadores para a tabela `tb_servico`
